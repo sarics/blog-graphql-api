@@ -1,0 +1,117 @@
+type Query {
+  me: User
+  users(
+    search: String
+    first: Int
+    skip: Int
+    after: ID
+    orderBy: OrderByInput
+  ): [User!]!
+
+  posts(
+    search: String
+    first: Int
+    skip: Int
+    after: ID
+    orderBy: OrderByInput
+    all: Boolean = false
+  ): [Post!]!
+  post(id: ID!): Post!
+
+  comments(first: Int, skip: Int, after: ID, orderBy: OrderByInput): [Comment!]!
+}
+
+input OrderByInput {
+  field: String!
+  order: OrderType!
+}
+
+enum OrderType {
+  ASC
+  DESC
+}
+
+type Mutation {
+  login(data: LoginInput!): AuthPayload!
+
+  createUser(data: CreateUserInput!): AuthPayload!
+  updateUser(data: UpdateUserInput!): User!
+  deleteUser: User!
+
+  createPost(data: CreatePostInput!): Post!
+  updatePost(id: ID!, data: UpdatePostInput!): Post!
+  deletePost(id: ID!): Post!
+
+  createComment(data: CreateCommentInput!): Comment!
+  updateComment(id: ID!, data: UpdateCommentInput!): Comment!
+  deleteComment(id: ID!): Comment!
+}
+
+type AuthPayload {
+  token: String!
+  user: User!
+}
+
+input LoginInput {
+  email: String!
+  password: String!
+}
+
+input CreateUserInput {
+  name: String!
+  email: String!
+  password: String!
+}
+input UpdateUserInput {
+  name: String
+  email: String
+}
+
+input CreatePostInput {
+  title: String!
+  body: String!
+  published: Boolean!
+}
+input UpdatePostInput {
+  title: String
+  body: String
+  published: Boolean
+}
+
+input CreateCommentInput {
+  text: String!
+  postId: ID!
+}
+input UpdateCommentInput {
+  text: String
+}
+
+type User {
+  id: ID!
+  name: String!
+  email: String
+  createdAt: String!
+  updatedAt: String!
+  posts(first: Int, skip: Int, after: ID, orderBy: OrderByInput): [Post!]!
+  comments: [Comment!]!
+}
+
+type Post {
+  id: ID!
+  title: String!
+  body: String!
+  published: Boolean!
+  author: User!
+  comments: [Comment!]!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type Comment {
+  id: ID!
+  text: String!
+  author: User!
+  post: Post!
+  createdAt: String!
+  updatedAt: String!
+}
