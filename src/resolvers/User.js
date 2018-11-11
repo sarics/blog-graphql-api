@@ -10,19 +10,25 @@ export default {
     return null;
   },
 
-  posts: withPaginatedQuery('Post')((parent, args, ctx, info) => {
-    const { request, db, query } = ctx;
-    const { Op } = db.Sequelize;
-    const userId = getUserId(request, false);
+  // posts: withPaginatedQuery('Post')((parent, args, ctx, info) => {
+  //   const { request, db, query } = ctx;
+  //   const { Op } = db.Sequelize;
+  //   const userId = getUserId(request, false);
 
-    if (userId === parent.id) return parent.getPosts(query);
+  //   if (userId === parent.id) return parent.getPosts(query);
 
-    query.where[Op.and].push({ published: true });
+  //   query.where[Op.and].push({ published: true });
 
-    return parent.getPosts(query);
-  }),
+  //   return parent.getPosts(query);
+  // }),
+  posts(parent, args, ctx, info) {
+    // const { request, db } = ctx;
+    // const userId = getUserId(request, false);
+
+    return parent.$relatedQuery('posts');
+  },
 
   comments: (parent, args, ctx, info) => {
-    return parent.getComments();
+    return parent.$relatedQuery('comments');
   },
 };

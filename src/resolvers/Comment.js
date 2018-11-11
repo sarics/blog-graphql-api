@@ -1,9 +1,9 @@
 export default {
   author: (parent, args, ctx, info) => {
-    return parent.getAuthor();
+    return parent.$relatedQuery('author');
   },
 
   post: (parent, args, ctx, info) => {
-    return parent.getPost();
+    return parent.$relatedQuery('post');
   },
 };

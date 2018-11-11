@@ -3,7 +3,7 @@ import '@babel/polyfill';
 import { GraphQLServer } from 'graphql-yoga';
 
 import resolvers from './resolvers';
-import db from '../database/models';
+import db from './models';
 
 const server = new GraphQLServer({
   typeDefs: './src/schema.graphql',
