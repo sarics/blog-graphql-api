@@ -3,6 +3,29 @@ import bcrypt from 'bcryptjs';
 import { generateToken } from '../utils/jwt';
 import getUserId from '../utils/getUserId';
 
+const createPost = (data, userId) => async Post => {
+  const post = await Post.query()
+    .insert(data)
+    .returning('*');
+
+  await post.$relatedQuery('author').relate(userId);
+
+  return post;
+};
+
+const createComment = (data, userId, postId) => async Comment => {
+  const comment = await Comment.query()
+    .insert(data)
+    .returning('*');
+
+  await Promise.all([
+    comment.$relatedQuery('author').relate(userId),
+    comment.$relatedQuery('post').relate(postId),
+  ]);
+
+  return comment;
+};
+
 export default {
   async login(parent, args, ctx, info) {
     const {
@@ -70,18 +93,9 @@ export default {
     const { request, db } = ctx;
     const userId = getUserId(request);
 
-    const createPost = async Post => {
-      const post = await Post.query()
-        .insert(data)
-        .returning('*');
-
-      await post.$relatedQuery('author').relate(userId);
-
-      return post;
-    };
-
     try {
-      const post = await db.transaction(db.Post, createPost);
+      const post = await db.transaction(db.Post, createPost(data, userId));
+
       return post;
     } catch (err) {
       throw new Error("Post couldn't be created.");
@@ -141,21 +155,12 @@ export default {
     const { request, db } = ctx;
     const userId = getUserId(request);
 
-    const createComment = async Comment => {
-      const comment = await Comment.query()
-        .insert(data)
-        .returning('*');
-
-      await Promise.all([
-        comment.$relatedQuery('author').relate(userId),
-        comment.$relatedQuery('post').relate(postId),
-      ]);
-
-      return comment;
-    };
-
     try {
-      const comment = await db.transaction(db.Comment, createComment);
+      const comment = await db.transaction(
+        db.Comment,
+        createComment(data, userId, postId),
+      );
+
       return comment;
     } catch (err) {
       throw new Error("Comment couldn't be created.");

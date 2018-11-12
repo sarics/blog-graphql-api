@@ -1,4 +1,4 @@
-import withPaginatedQuery from '../utils/withPaginatedQuery';
+// import withPaginatedQuery from '../utils/withPaginatedQuery';
 import getUserId from '../utils/getUserId';
 
 export default {

@@ -3,7 +3,7 @@ export default {
     return parent.$relatedQuery('author');
   },
 
-  comments: (parent, args, ctx, info) => {
+  comments(parent, args, ctx, info) {
     return parent.$relatedQuery('comments');
   },
 };

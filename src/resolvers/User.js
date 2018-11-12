@@ -1,8 +1,8 @@
-import withPaginatedQuery from '../utils/withPaginatedQuery';
+// import withPaginatedQuery from '../utils/withPaginatedQuery';
 import getUserId from '../utils/getUserId';
 
 export default {
-  email: (parent, args, ctx, info) => {
+  email(parent, args, ctx, info) {
     const { request } = ctx;
     const userId = getUserId(request, false);
 
@@ -28,7 +28,7 @@ export default {
     return parent.$relatedQuery('posts');
   },
 
-  comments: (parent, args, ctx, info) => {
+  comments(parent, args, ctx, info) {
     return parent.$relatedQuery('comments');
   },
 };
