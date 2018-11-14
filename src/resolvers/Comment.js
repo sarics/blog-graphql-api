@@ -4,6 +4,6 @@ export default {
   },
 
   post(parent, args, ctx, info) {
-    return parent.$relatedQuery('post');
+    return parent.$relatedQuery('post').paginated(args);
   },
 };

@@ -1,4 +1,3 @@
-// import withPaginatedQuery from '../utils/withPaginatedQuery';
 import getUserId from '../utils/getUserId';
 
 export default {
@@ -25,10 +24,10 @@ export default {
     // const { request, db } = ctx;
     // const userId = getUserId(request, false);
 
-    return parent.$relatedQuery('posts');
+    return parent.$relatedQuery('posts').paginated(args);
   },
 
   comments(parent, args, ctx, info) {
-    return parent.$relatedQuery('comments');
+    return parent.$relatedQuery('comments').paginated(args);
   },
 };

@@ -4,6 +4,6 @@ export default {
   },
 
   comments(parent, args, ctx, info) {
-    return parent.$relatedQuery('comments');
+    return parent.$relatedQuery('comments').paginated(args);
   },
 };

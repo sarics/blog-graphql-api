@@ -1,7 +1,11 @@
 import { Model } from 'objection';
 import cuid from 'cuid';
 
+import BaseQueryBuilder from './BaseQueryBuilder';
+
 class BaseModel extends Model {
+  static QueryBuilder = BaseQueryBuilder;
+
   $beforeInsert() {
     this.id = cuid();
     this.createdAt = new Date().toISOString();
