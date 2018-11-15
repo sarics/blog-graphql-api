@@ -1,3 +1,55 @@
+type User {
+  id: ID!
+  name: String!
+  email: String
+  createdAt: String!
+  updatedAt: String!
+
+  posts(first: Int, skip: Int, orderBy: PostsOrderByInput): [Post!]!
+  comments(first: Int, skip: Int, orderBy: CommentsOrderByInput): [Comment!]!
+}
+
+enum UserOrderByField {
+  name
+  createdAt
+  updatedAt
+}
+
+type Post {
+  id: ID!
+  title: String!
+  body: String!
+  published: Boolean!
+  createdAt: String!
+  updatedAt: String!
+
+  author: User!
+  comments(first: Int, skip: Int, orderBy: CommentsOrderByInput): [Comment!]!
+}
+
+enum PostOrderByField {
+  title
+  body
+  createdAt
+  updatedAt
+}
+
+type Comment {
+  id: ID!
+  text: String!
+  createdAt: String!
+  updatedAt: String!
+
+  author: User!
+  post: Post!
+}
+
+enum CommentOrderByField {
+  text
+  createdAt
+  updatedAt
+}
+
 type Query {
   me: User
   users(
@@ -5,7 +57,7 @@ type Query {
     first: Int
     skip: Int
     after: ID
-    orderBy: OrderByInput
+    orderBy: UsersOrderByInput
   ): [User!]!
 
   posts(
@@ -13,22 +65,37 @@ type Query {
     first: Int
     skip: Int
     after: ID
-    orderBy: OrderByInput
+    orderBy: PostsOrderByInput
     all: Boolean = false
   ): [Post!]!
   post(id: ID!): Post!
 
-  comments(first: Int, skip: Int, after: ID, orderBy: OrderByInput): [Comment!]!
+  comments(
+    first: Int
+    skip: Int
+    after: ID
+    orderBy: CommentsOrderByInput
+  ): [Comment!]!
 }
 
-input OrderByInput {
-  field: String!
-  order: OrderType!
-}
-
-enum OrderType {
+enum OrderByOrder {
   ASC
   DESC
+}
+
+input UsersOrderByInput {
+  field: UserOrderByField!
+  order: OrderByOrder!
+}
+
+input PostsOrderByInput {
+  field: PostOrderByField!
+  order: OrderByOrder!
+}
+
+input CommentsOrderByInput {
+  field: CommentOrderByField!
+  order: OrderByOrder!
 }
 
 type Mutation {
@@ -84,34 +151,4 @@ input CreateCommentInput {
 }
 input UpdateCommentInput {
   text: String
-}
-
-type User {
-  id: ID!
-  name: String!
-  email: String
-  createdAt: String!
-  updatedAt: String!
-  posts(first: Int, skip: Int, after: ID, orderBy: OrderByInput): [Post!]!
-  comments: [Comment!]!
-}
-
-type Post {
-  id: ID!
-  title: String!
-  body: String!
-  published: Boolean!
-  author: User!
-  comments: [Comment!]!
-  createdAt: String!
-  updatedAt: String!
-}
-
-type Comment {
-  id: ID!
-  text: String!
-  author: User!
-  post: Post!
-  createdAt: String!
-  updatedAt: String!
 }

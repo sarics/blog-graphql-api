@@ -3,14 +3,42 @@ import bcrypt from 'bcryptjs';
 import { generateToken } from '../utils/jwt';
 import getUserId from '../utils/getUserId';
 
+const createPost = (data, userId) => async Post => {
+  const post = await Post.query()
+    .insert(data)
+    .returning('*');
+
+  await post.$relatedQuery('author').relate(userId);
+
+  return post;
+};
+
+const createComment = (data, userId, postId) => async Comment => {
+  const comment = await Comment.query()
+    .insert(data)
+    .returning('*');
+
+  await Promise.all([
+    comment.$relatedQuery('author').relate(userId),
+    comment.$relatedQuery('post').relate(postId),
+  ]);
+
+  return comment;
+};
+
 export default {
-  async login(parent, { data }, { db }, info) {
-    const user = await db.User.findOne({ where: { email: data.email } });
+  async login(parent, args, ctx, info) {
+    const {
+      data: { email, password },
+    } = args;
+    const { db } = ctx;
+
+    const user = await db.User.query().findOne({ email });
     if (!user) {
       throw new Error('Unable to login.');
     }
 
-    const passwordMatch = await bcrypt.compare(data.password, user.password);
+    const passwordMatch = await bcrypt.compare(password, user.password);
     if (!passwordMatch) {
       throw new Error('Unable to login.');
     }
@@ -21,45 +49,69 @@ export default {
     };
   },
 
-  async createUser(parent, { data }, { db }, info) {
-    const user = await db.User.create(data);
+  async createUser(parent, args, ctx, info) {
+    const { data } = args;
+    const { db } = ctx;
+
+    const user = await db.User.query()
+      .insert(data)
+      .returning('*');
 
     return {
       user,
       token: generateToken(user.id),
     };
   },
-  async updateUser(parent, { data }, { request, db }, info) {
+  async updateUser(parent, args, ctx, info) {
+    const { data } = args;
+    const { request, db } = ctx;
     const userId = getUserId(request);
-    const user = await db.User.findByPk(userId);
 
-    return user.update(data);
+    const user = await db.User.query()
+      .findById(userId)
+      .patch(data)
+      .returning('*')
+      .first();
+
+    return user;
   },
-  async deleteUser(parent, args, { request, db }, info) {
+  async deleteUser(parent, args, ctx, info) {
+    const { request, db } = ctx;
     const userId = getUserId(request);
-    const user = await db.User.findByPk(userId);
 
-    await user.destroy();
+    const user = await db.User.query()
+      .findById(userId)
+      .delete()
+      .returning('*')
+      .first();
 
     return user;
   },
 
-  createPost(parent, { data }, { request, db }, info) {
+  async createPost(parent, args, ctx, info) {
+    const { data } = args;
+    const { request, db } = ctx;
     const userId = getUserId(request);
 
-    return db.Post.create({
-      ...data,
-      authorId: userId,
-    });
+    try {
+      const post = await db.transaction(db.Post, createPost(data, userId));
+
+      return post;
+    } catch (err) {
+      throw new Error("Post couldn't be created.");
+    }
   },
-  async updatePost(parent, { id, data }, { request, db }, info) {
+  async updatePost(parent, args, ctx, info) {
+    const { id, data } = args;
+    const { request, db } = ctx;
     const userId = getUserId(request);
-    const post = await db.Post.findOne({
-      where: {
-        id,
-        authorId: userId,
-      },
-    });
+
+    const post = await db.Post.query()
+      .findById(id)
+      .whereExists(db.Post.relatedQuery('author').findById(userId))
+      .patch(data)
+      .returning('*')
+      .first();
 
     if (!post) {
       throw new Error('Post not found.');
@@ -75,63 +127,78 @@ export default {
     //   });
     // }
 
-    return post.update(data);
+    return post;
   },
-  async deletePost(parent, { id }, { request, db }, info) {
+  async deletePost(parent, args, ctx, info) {
+    const { id } = args;
+    const { request, db } = ctx;
     const userId = getUserId(request);
-    const post = await db.Post.findOne({
-      where: {
-        id,
-        authorId: userId,
-      },
-    });
+
+    const post = await db.Post.query()
+      .findById(id)
+      .whereExists(db.Post.relatedQuery('author').findById(userId))
+      .delete()
+      .returning('*')
+      .first();
 
     if (!post) {
       throw new Error('Post not found.');
     }
 
-    await post.destroy();
-
     return post;
   },
 
-  createComment(parent, { data }, { request, db }, info) {
+  async createComment(parent, args, ctx, info) {
+    const {
+      data: { postId, ...data },
+    } = args;
+    const { request, db } = ctx;
     const userId = getUserId(request);
 
-    return db.Comment.create({
-      ...data,
-      authorId: userId,
-    });
+    try {
+      const comment = await db.transaction(
+        db.Comment,
+        createComment(data, userId, postId),
+      );
+
+      return comment;
+    } catch (err) {
+      throw new Error("Comment couldn't be created.");
+    }
   },
-  async updateComment(parent, { id, data }, { request, db }, info) {
+  async updateComment(parent, args, ctx, info) {
+    const { id, data } = args;
+    const { request, db } = ctx;
     const userId = getUserId(request);
-    const comment = await db.Comment.findOne({
-      where: {
-        id,
-        authorId: userId,
-      },
-    });
+
+    const comment = await db.Comment.query()
+      .findById(id)
+      .whereExists(db.Comment.relatedQuery('author').findById(userId))
+      .patch(data)
+      .returning('*')
+      .first();
 
     if (!comment) {
       throw new Error('Comment not found.');
     }
 
-    return comment.update(data);
+    return comment;
   },
-  async deleteComment(parent, { id }, { request, db }, info) {
+  async deleteComment(parent, args, ctx, info) {
+    const { id } = args;
+    const { request, db } = ctx;
     const userId = getUserId(request);
-    const comment = await db.Comment.findOne({
-      where: {
-        id,
-        authorId: userId,
-      },
-    });
+
+    const comment = await db.Comment.query()
+      .findById(id)
+      .whereExists(db.Comment.relatedQuery('author').findById(userId))
+      .delete()
+      .returning('*')
+      .first();
 
     if (!comment) {
       throw new Error('Comment not found.');
     }
-
-    await comment.destroy();
 
     return comment;
   },

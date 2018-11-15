@@ -1,104 +1,93 @@
-import withPaginatedQuery from '../utils/withPaginatedQuery';
 import getUserId from '../utils/getUserId';
 
 export default {
-  me(parent, args, { request, db }, info) {
+  me(parent, args, ctx, info) {
+    const { request, db } = ctx;
     const userId = getUserId(request, false);
     if (!userId) return null;
 
-    return db.User.findByPk(userId);
+    return db.User.query().findById(userId);
   },
 
-  users: withPaginatedQuery('User')((parent, args, ctx, info) => {
+  async users(parent, args, ctx, info) {
     const { search } = args;
-    const { db, query } = ctx;
-    const { Op } = db.Sequelize;
+    const { db } = ctx;
+
+    const query = db.User.query().paginated(args);
 
     if (search) {
-      query.where[Op.and].push({
-        name: {
-          [Op.iLike]: `%${search}%`,
-        },
-      });
+      query.where('name', 'ilike', `%${search}%`);
     }
 
-    return db.User.findAll(query);
-  }),
+    const users = await query;
 
-  posts: withPaginatedQuery('Post')((parent, args, ctx, info) => {
+    return users;
+  },
+
+  async posts(parent, args, ctx, info) {
     const { search, all } = args;
-    const { request, db, query } = ctx;
-    const { Op } = db.Sequelize;
+    const { request, db } = ctx;
     const userId = getUserId(request, false);
 
+    const query = db.Post.query().paginated(args);
+
     if (search) {
-      query.where[Op.and].push({
-        [Op.or]: [
-          {
-            title: {
-              [Op.iLike]: `%${search}%`,
-            },
-          },
-          {
-            body: {
-              [Op.iLike]: `%${search}%`,
-            },
-          },
-        ],
+      query.where(qb => {
+        qb.where('title', 'ilike', `%${search}%`).orWhere(
+          'body',
+          'ilike',
+          `%${search}%`,
+        );
       });
     }
 
     if (all && userId) {
-      query.where[Op.and].push({
-        [Op.or]: [
-          {
-            published: true,
-          },
-          {
-            authorId: userId,
-          },
-        ],
+      query.where(qb => {
+        qb.where('published', true).orWhereExists(
+          db.Post.relatedQuery('author').findById(userId),
+        );
       });
     } else {
-      query.where[Op.and].push({
-        published: true,
-      });
+      query.where('published', true);
     }
 
-    return db.Post.findAll(query);
-  }),
-  async post(parent, { id }, { request, db }, info) {
-    const { Op } = db.Sequelize;
+    const posts = await query;
+
+    return posts;
+  },
+  async post(parent, args, ctx, info) {
+    const { id } = args;
+    const { request, db } = ctx;
     const userId = getUserId(request, false);
-    const query = {
-      where: {
-        id,
-      },
-    };
+
+    const query = db.Post.query().findById(id);
 
     if (userId) {
-      query.where[Op.or] = [
-        {
-          published: true,
-        },
-        {
-          authorId: userId,
-        },
-      ];
+      query.where(qb => {
+        qb.where('published', true).orWhereExists(
+          db.Post.relatedQuery('author').findById(userId),
+        );
+      });
     } else {
-      query.where.published = true;
+      query.where('published', true);
     }
 
-    const post = await db.Post.findOne(query);
+    const post = await query;
 
-    if (post) return post;
+    if (!post) {
+      throw new Error('Post not found.');
+    }
 
-    throw new Error('Post not found.');
+    return post;
   },
 
-  comments: withPaginatedQuery('Comment')((parent, args, ctx, info) => {
-    const { db, query } = ctx;
+  async comments(parent, args, ctx, info) {
+    const { db } = ctx;
 
-    return db.Comment.findAll(query);
-  }),
+    const query = db.Comment.query().paginated(args);
+
+    const comments = await query;
+
+    return comments;
+  },
 };
