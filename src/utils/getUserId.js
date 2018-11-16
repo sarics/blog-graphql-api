@@ -1,7 +1,7 @@
 import { verifyToken } from './jwt';
 
 export default (request, requireAuth = true) => {
-  const authHeader = request.request.headers.authorization;
+  const authHeader = request.headers.authorization;
   if (!authHeader) {
     if (requireAuth) throw new Error('Authentication required.');
     return null;
