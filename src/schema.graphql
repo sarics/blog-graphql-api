@@ -1,9 +1,11 @@
+scalar Date
+
 type User {
   id: ID!
   name: String!
   email: String
-  createdAt: String!
-  updatedAt: String!
+  createdAt: Date!
+  updatedAt: Date!
 
   posts(first: Int, skip: Int, orderBy: PostsOrderByInput): [Post!]!
   comments(first: Int, skip: Int, orderBy: CommentsOrderByInput): [Comment!]!
@@ -20,8 +22,8 @@ type Post {
   title: String!
   body: String!
   published: Boolean!
-  createdAt: String!
-  updatedAt: String!
+  createdAt: Date!
+  updatedAt: Date!
 
   author: User!
   comments(first: Int, skip: Int, orderBy: CommentsOrderByInput): [Comment!]!
@@ -37,8 +39,8 @@ enum PostOrderByField {
 type Comment {
   id: ID!
   text: String!
-  createdAt: String!
-  updatedAt: String!
+  createdAt: Date!
+  updatedAt: Date!
 
   author: User!
   post: Post!
