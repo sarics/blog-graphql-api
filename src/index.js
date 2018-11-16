@@ -1,21 +1,22 @@
 import '@babel/polyfill';
 
-import { GraphQLServer } from 'graphql-yoga';
+import { ApolloServer } from 'apollo-server';
+import { importSchema } from 'graphql-import';
 
 import resolvers from './resolvers';
 import db from './models';
 
-const server = new GraphQLServer({
-  typeDefs: './src/schema.graphql',
+const server = new ApolloServer({
+  typeDefs: importSchema('./src/schema.graphql'),
   resolvers,
-  context(request) {
+  context({ req }) {
     return {
-      request,
+      request: req,
       db,
     };
   },
 });
 
-server.start({ port: process.env.PORT || '4000' }, ({ port }) => {
-  console.log(`server is running on port ${port} 🚀`);
+server.listen({ port: process.env.PORT || '4000' }).then(({ url }) => {
+  console.log(`Server ready at ${url} 🚀`);
 });
