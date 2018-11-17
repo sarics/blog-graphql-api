@@ -80,6 +80,7 @@ type Query {
     after: ID
     orderBy: CommentsOrderByInput
   ): [Comment!]!
+  comment(id: ID!): Comment!
 }
 
 enum OrderByOrder {

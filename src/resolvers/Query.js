@@ -29,13 +29,15 @@ export default {
     return db.Post.getById(id);
   },
 
-  async comments(parent, args, ctx, info) {
+  comments(parent, args, ctx, info) {
     const { db } = ctx;
 
-    const query = db.Comment.query().paginated(args);
+    return db.Comment.getAll(args);
+  },
+  comment(parent, args, ctx, info) {
+    const { id } = args;
+    const { db } = ctx;
 
-    const comments = await query;
-
-    return comments;
+    return db.Comment.getById(id);
   },
 };
