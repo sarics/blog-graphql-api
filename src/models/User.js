@@ -145,11 +145,15 @@ const generateUserModel = user =>
     }
 
     getPosts(args) {
-      return this.$relatedQuery('posts').paginated(args);
+      return this.$relatedQuery('posts')
+        .paginated(args)
+        .execute();
     }
 
     getComments(args) {
-      return this.$relatedQuery('comments').paginated(args);
+      return this.$relatedQuery('comments')
+        .paginated(args)
+        .execute();
     }
   };
 
