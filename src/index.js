@@ -17,7 +17,6 @@ const server = new ApolloServer({
     const user = getUser(req);
 
     return {
-      request: req,
       user,
       db: generateModels(user),
     };

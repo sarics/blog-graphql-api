@@ -1,6 +1,19 @@
-import { Model } from 'objection';
+import { Model, transaction } from 'objection';
 
 import BaseModel from './BaseModel';
+
+const createComment = (data, userId, postId) => async Comment => {
+  const comment = await Comment.query()
+    .insert(data)
+    .returning('*');
+
+  await Promise.all([
+    comment.$relatedQuery('author').relate(userId),
+    comment.$relatedQuery('post').relate(postId),
+  ]);
+
+  return comment;
+};
 
 const generateCommentModel = user =>
   class Comment extends BaseModel {
@@ -55,6 +68,47 @@ const generateCommentModel = user =>
     static getById(id) {
       return Comment.query()
         .findById(id)
+        .throwIfNotFound()
+        .execute();
+    }
+
+    static async create({ postId, ...data }) {
+      if (!user) throw Comment.createAuthenticationError();
+
+      try {
+        const comment = await transaction(
+          Comment,
+          createComment(data, user.id, postId),
+        );
+
+        return comment;
+      } catch (err) {
+        throw new Error("Comment couldn't be created.");
+      }
+    }
+
+    static update(id, data) {
+      if (!user) throw Comment.createAuthenticationError();
+
+      return Comment.query()
+        .findById(id)
+        .whereExists(Comment.relatedQuery('author').findById(user.id))
+        .patch(data)
+        .returning('*')
+        .first()
+        .throwIfNotFound()
+        .execute();
+    }
+
+    static delete(id) {
+      if (!user) throw Comment.createAuthenticationError();
+
+      return Comment.query()
+        .findById(id)
+        .whereExists(Comment.relatedQuery('author').findById(user.id))
+        .delete()
+        .returning('*')
+        .first()
         .throwIfNotFound()
         .execute();
     }

@@ -1,18 +1,4 @@
 import { generateToken } from '../utils/jwt';
-import getUserId from '../utils/getUserId';
-
-const createComment = (data, userId, postId) => async Comment => {
-  const comment = await Comment.query()
-    .insert(data)
-    .returning('*');
-
-  await Promise.all([
-    comment.$relatedQuery('author').relate(userId),
-    comment.$relatedQuery('post').relate(postId),
-  ]);
-
-  return comment;
-};
 
 export default {
   async login(parent, args, ctx, info) {
@@ -69,58 +55,22 @@ export default {
     return db.Post.delete(id);
   },
 
-  async createComment(parent, args, ctx, info) {
-    const {
-      data: { postId, ...data },
-    } = args;
-    const { request, db } = ctx;
-    const userId = getUserId(request);
+  createComment(parent, args, ctx, info) {
+    const { data } = args;
+    const { db } = ctx;
 
-    try {
-      const comment = await db.transaction(
-        db.Comment,
-        createComment(data, userId, postId),
-      );
-
-      return comment;
-    } catch (err) {
-      throw new Error("Comment couldn't be created.");
-    }
+    return db.Comment.create(data);
   },
-  async updateComment(parent, args, ctx, info) {
+  updateComment(parent, args, ctx, info) {
     const { id, data } = args;
-    const { request, db } = ctx;
-    const userId = getUserId(request);
+    const { db } = ctx;
 
-    const comment = await db.Comment.query()
-      .findById(id)
-      .whereExists(db.Comment.relatedQuery('author').findById(userId))
-      .patch(data)
-      .returning('*')
-      .first();
-
-    if (!comment) {
-      throw new Error('Comment not found.');
-    }
-
-    return comment;
+    return db.Comment.update(id, data);
   },
-  async deleteComment(parent, args, ctx, info) {
+  deleteComment(parent, args, ctx, info) {
     const { id } = args;
-    const { request, db } = ctx;
-    const userId = getUserId(request);
+    const { db } = ctx;
 
-    const comment = await db.Comment.query()
-      .findById(id)
-      .whereExists(db.Comment.relatedQuery('author').findById(userId))
-      .delete()
-      .returning('*')
-      .first();
-
-    if (!comment) {
-      throw new Error('Comment not found.');
-    }
-
-    return comment;
+    return db.Comment.delete(id);
   },
 };
