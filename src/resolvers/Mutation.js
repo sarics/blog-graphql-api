@@ -1,5 +1,3 @@
-import bcrypt from 'bcryptjs';
-
 import { generateToken } from '../utils/jwt';
 import getUserId from '../utils/getUserId';
 
@@ -28,24 +26,14 @@ const createComment = (data, userId, postId) => async Comment => {
 
 export default {
   async login(parent, args, ctx, info) {
-    const {
-      data: { email, password },
-    } = args;
+    const { data } = args;
     const { db } = ctx;
 
-    const user = await db.User.query().findOne({ email });
-    if (!user) {
-      throw new Error('Unable to login.');
-    }
-
-    const passwordMatch = await bcrypt.compare(password, user.password);
-    if (!passwordMatch) {
-      throw new Error('Unable to login.');
-    }
+    const user = await db.User.login(data);
 
     return {
       user,
-      token: generateToken(user.id),
+      token: generateToken(user),
     };
   },
 
@@ -53,39 +41,23 @@ export default {
     const { data } = args;
     const { db } = ctx;
 
-    const user = await db.User.query()
-      .insert(data)
-      .returning('*');
+    const user = await db.User.create(data);
 
     return {
       user,
-      token: generateToken(user.id),
+      token: generateToken(user),
     };
   },
-  async updateUser(parent, args, ctx, info) {
+  updateUser(parent, args, ctx, info) {
     const { data } = args;
-    const { request, db } = ctx;
-    const userId = getUserId(request);
+    const { db } = ctx;
 
-    const user = await db.User.query()
-      .findById(userId)
-      .patch(data)
-      .returning('*')
-      .first();
-
-    return user;
+    return db.User.update(data);
   },
-  async deleteUser(parent, args, ctx, info) {
-    const { request, db } = ctx;
-    const userId = getUserId(request);
+  deleteUser(parent, args, ctx, info) {
+    const { db } = ctx;
 
-    const user = await db.User.query()
-      .findById(userId)
-      .delete()
-      .returning('*')
-      .first();
-
-    return user;
+    return db.User.delete();
   },
 
   async createPost(parent, args, ctx, info) {

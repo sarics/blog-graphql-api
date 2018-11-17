@@ -2,26 +2,21 @@ import getUserId from '../utils/getUserId';
 
 export default {
   me(parent, args, ctx, info) {
-    const { request, db } = ctx;
-    const userId = getUserId(request, false);
-    if (!userId) return null;
-
-    return db.User.query().findById(userId);
-  },
-
-  async users(parent, args, ctx, info) {
-    const { search } = args;
     const { db } = ctx;
 
-    const query = db.User.query().paginated(args);
+    return db.User.me();
+  },
 
-    if (search) {
-      query.where('name', 'ilike', `%${search}%`);
-    }
+  users(parent, args, ctx, info) {
+    const { db } = ctx;
 
-    const users = await query;
+    return db.User.getAll(args);
+  },
+  user(parent, args, ctx, info) {
+    const { id } = args;
+    const { db } = ctx;
 
-    return users;
+    return db.User.getById(id);
   },
 
   async posts(parent, args, ctx, info) {

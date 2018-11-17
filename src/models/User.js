@@ -3,62 +3,150 @@ import bcrypt from 'bcryptjs';
 
 import BaseModel from './BaseModel';
 
-class User extends BaseModel {
-  static tableName = 'Users';
+const generateUserModel = user =>
+  class User extends BaseModel {
+    static tableName = 'Users';
 
-  static jsonSchema = {
-    type: 'object',
-    required: ['name', 'email', 'password'],
+    static jsonSchema = {
+      type: 'object',
+      required: ['name', 'email', 'password'],
 
-    properties: {
-      id: { type: 'string' },
-      name: { type: 'string', minLength: 1, maxLength: 255 },
-      email: { type: 'string', format: 'email', minLength: 1, maxLength: 255 },
-      password: { type: 'string', minLength: 8 },
-    },
-  };
-
-  static setRelationMappings({ Post, Comment }) {
-    User.relationMappings = {
-      posts: {
-        relation: Model.ManyToManyRelation,
-        modelClass: Post,
-        join: {
-          from: 'Users.id',
-          to: 'Posts.id',
-          through: {
-            from: 'PostsToUsers.UserId',
-            to: 'PostsToUsers.PostId',
-          },
+      properties: {
+        id: { type: 'string' },
+        name: {
+          type: 'string',
+          minLength: 1,
+          maxLength: 255,
         },
-      },
-
-      comments: {
-        relation: Model.ManyToManyRelation,
-        modelClass: Comment,
-        join: {
-          from: 'Users.id',
-          to: 'Comments.id',
-          through: {
-            from: 'CommentsToUsers.UserId',
-            to: 'CommentsToUsers.CommentId',
-          },
+        email: {
+          type: 'string',
+          format: 'email',
+          minLength: 1,
+          maxLength: 255,
+        },
+        password: {
+          type: 'string',
+          minLength: 8,
         },
       },
     };
-  }
 
-  $beforeInsert(queryContext) {
-    super.$beforeInsert(queryContext);
+    static setRelationMappings({ Post, Comment }) {
+      User.relationMappings = {
+        posts: {
+          relation: Model.ManyToManyRelation,
+          modelClass: Post,
+          join: {
+            from: 'Users.id',
+            to: 'Posts.id',
+            through: {
+              from: 'PostsToUsers.UserId',
+              to: 'PostsToUsers.PostId',
+            },
+          },
+        },
 
-    this.password = bcrypt.hashSync(this.password, 10);
-  }
+        comments: {
+          relation: Model.ManyToManyRelation,
+          modelClass: Comment,
+          join: {
+            from: 'Users.id',
+            to: 'Comments.id',
+            through: {
+              from: 'CommentsToUsers.UserId',
+              to: 'CommentsToUsers.CommentId',
+            },
+          },
+        },
+      };
+    }
 
-  $beforeUpdate(opt, queryContext) {
-    super.$beforeUpdate(opt, queryContext);
+    static getAll(args) {
+      const { search } = args;
 
-    if (this.password) this.password = bcrypt.hashSync(this.password, 10);
-  }
-}
+      const query = User.query().paginated(args);
 
-export default User;
+      if (search) {
+        query.where('name', 'ilike', `%${search}%`);
+      }
+
+      return query;
+    }
+
+    static getById(id) {
+      return User.query()
+        .findById(id)
+        .throwIfNotFound();
+    }
+
+    static create(data) {
+      return User.query()
+        .insert(data)
+        .returning('*');
+    }
+
+    static update(data) {
+      if (!user) throw User.createAuthenticationError();
+
+      return User.query()
+        .findById(user.id)
+        .patch(data)
+        .returning('*')
+        .first()
+        .throwIfNotFound();
+    }
+
+    static delete() {
+      if (!user) throw User.createAuthenticationError();
+
+      return User.query()
+        .findById(user.id)
+        .delete()
+        .returning('*')
+        .first()
+        .throwIfNotFound();
+    }
+
+    static me() {
+      if (!user) throw User.createNotFoundError();
+
+      return User.getById(user.id);
+    }
+
+    static async login(data) {
+      const { email, password } = data;
+
+      const userItem = await User.query()
+        .findOne({ email })
+        .throwIfNotFound();
+
+      const passwordMatch = bcrypt.compareSync(password, userItem.password);
+      if (!passwordMatch) {
+        throw User.createNotFoundError();
+      }
+
+      return userItem;
+    }
+
+    $beforeInsert(queryContext) {
+      super.$beforeInsert(queryContext);
+
+      this.password = bcrypt.hashSync(this.password, 10);
+    }
+
+    $beforeUpdate(opt, queryContext) {
+      super.$beforeUpdate(opt, queryContext);
+
+      if (this.password) this.password = bcrypt.hashSync(this.password, 10);
+    }
+
+    getPosts(args) {
+      return this.$relatedQuery('posts').paginated(args);
+    }
+
+    getComments(args) {
+      return this.$relatedQuery('comments').paginated(args);
+    }
+  };
+
+export default generateUserModel;

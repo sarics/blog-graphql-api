@@ -4,19 +4,27 @@ import { ApolloServer } from 'apollo-server';
 import { importSchema } from 'graphql-import';
 
 import resolvers from './resolvers';
-import db from './models';
+import generateModels from './models';
+import getUser from './utils/getUser';
+
+const env = process.env.NODE_ENV || 'development';
+const port = process.env.PORT || '4000';
 
 const server = new ApolloServer({
   typeDefs: importSchema('./src/schema.graphql'),
   resolvers,
   context({ req }) {
+    const user = getUser(req);
+
     return {
       request: req,
-      db,
+      user,
+      db: generateModels(user),
     };
   },
+  tracing: env === 'development',
 });
 
-server.listen({ port: process.env.PORT || '4000' }).then(({ url }) => {
+server.listen({ port }).then(({ url }) => {
   console.log(`Server ready at ${url} 🚀`);
 });
