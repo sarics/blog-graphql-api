@@ -70,19 +70,21 @@ const generateUserModel = user =>
         query.where('name', 'ilike', `%${search}%`);
       }
 
-      return query;
+      return query.execute();
     }
 
     static getById(id) {
       return User.query()
         .findById(id)
-        .throwIfNotFound();
+        .throwIfNotFound()
+        .execute();
     }
 
     static create(data) {
       return User.query()
         .insert(data)
-        .returning('*');
+        .returning('*')
+        .execute();
     }
 
     static update(data) {
@@ -93,7 +95,8 @@ const generateUserModel = user =>
         .patch(data)
         .returning('*')
         .first()
-        .throwIfNotFound();
+        .throwIfNotFound()
+        .execute();
     }
 
     static delete() {
@@ -104,7 +107,8 @@ const generateUserModel = user =>
         .delete()
         .returning('*')
         .first()
-        .throwIfNotFound();
+        .throwIfNotFound()
+        .execute();
     }
 
     static me() {
