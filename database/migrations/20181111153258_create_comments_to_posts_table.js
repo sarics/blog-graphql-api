@@ -1,4 +1,4 @@
-exports.up = function(knex, Promise) {
+exports.up = function up(knex, Promise) {
   return knex.schema.createTable('CommentsToPosts', table => {
     table
       .string('CommentId', 25)
@@ -16,6 +16,6 @@ exports.up = function(knex, Promise) {
   });
 };
 
-exports.down = function(knex, Promise) {
+exports.down = function down(knex, Promise) {
   return knex.schema.dropTable('CommentsToPosts');
 };

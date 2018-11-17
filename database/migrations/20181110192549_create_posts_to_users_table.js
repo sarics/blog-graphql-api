@@ -1,4 +1,4 @@
-exports.up = function(knex, Promise) {
+exports.up = function up(knex, Promise) {
   return knex.schema.createTable('PostsToUsers', table => {
     table
       .string('PostId', 25)
@@ -16,6 +16,6 @@ exports.up = function(knex, Promise) {
   });
 };
 
-exports.down = function(knex, Promise) {
+exports.down = function down(knex, Promise) {
   return knex.schema.dropTable('PostsToUsers');
 };
