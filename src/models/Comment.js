@@ -112,6 +112,14 @@ const generateCommentModel = user =>
         .throwIfNotFound()
         .execute();
     }
+
+    getAuthor() {
+      return this.$relatedQuery('author').execute();
+    }
+
+    getPost() {
+      return this.$relatedQuery('post').execute();
+    }
   };
 
 export default generateCommentModel;
