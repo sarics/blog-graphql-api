@@ -1,9 +1,9 @@
 export default {
   author(parent, args, ctx, info) {
-    return parent.$relatedQuery('author');
+    return parent.getAuthor();
   },
 
   comments(parent, args, ctx, info) {
-    return parent.$relatedQuery('comments').paginated(args);
+    return parent.getComments(args);
   },
 };

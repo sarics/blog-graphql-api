@@ -141,6 +141,16 @@ const generatePostModel = user =>
         .throwIfNotFound()
         .execute();
     }
+
+    getAuthor() {
+      return this.$relatedQuery('author').execute();
+    }
+
+    getComments(args) {
+      return this.$relatedQuery('comments')
+        .paginated(args)
+        .execute();
+    }
   };
 
 export default generatePostModel;
