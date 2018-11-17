@@ -1,5 +1,3 @@
-import getUserId from '../utils/getUserId';
-
 export default {
   me(parent, args, ctx, info) {
     const { db } = ctx;
@@ -19,61 +17,16 @@ export default {
     return db.User.getById(id);
   },
 
-  async posts(parent, args, ctx, info) {
-    const { search, all } = args;
-    const { request, db } = ctx;
-    const userId = getUserId(request, false);
+  posts(parent, args, ctx, info) {
+    const { db } = ctx;
 
-    const query = db.Post.query().paginated(args);
-
-    if (search) {
-      query.where(qb => {
-        qb.where('title', 'ilike', `%${search}%`).orWhere(
-          'body',
-          'ilike',
-          `%${search}%`,
-        );
-      });
-    }
-
-    if (all && userId) {
-      query.where(qb => {
-        qb.where('published', true).orWhereExists(
-          db.Post.relatedQuery('author').findById(userId),
-        );
-      });
-    } else {
-      query.where('published', true);
-    }
-
-    const posts = await query;
-
-    return posts;
+    return db.Post.getAll(args);
   },
-  async post(parent, args, ctx, info) {
+  post(parent, args, ctx, info) {
     const { id } = args;
-    const { request, db } = ctx;
-    const userId = getUserId(request, false);
+    const { db } = ctx;
 
-    const query = db.Post.query().findById(id);
-
-    if (userId) {
-      query.where(qb => {
-        qb.where('published', true).orWhereExists(
-          db.Post.relatedQuery('author').findById(userId),
-        );
-      });
-    } else {
-      query.where('published', true);
-    }
-
-    const post = await query;
-
-    if (!post) {
-      throw new Error('Post not found.');
-    }
-
-    return post;
+    return db.Post.getById(id);
   },
 
   async comments(parent, args, ctx, info) {
