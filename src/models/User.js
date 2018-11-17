@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 
 import BaseModel from './BaseModel';
 
-const generateUserModel = user =>
+export default user =>
   class User extends BaseModel {
     static tableName = 'Users';
 
@@ -156,5 +156,3 @@ const generateUserModel = user =>
         .execute();
     }
   };
-
-export default generateUserModel;

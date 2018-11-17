@@ -1,5 +1,5 @@
 import Knex from 'knex';
-import { Model, transaction } from 'objection';
+import { Model } from 'objection';
 
 import knexfile from '../../knexfile';
 import generateUserModel from './User';
@@ -24,8 +24,5 @@ export default user => {
       model.setRelationMappings(models);
   });
 
-  return {
-    ...models,
-    transaction,
-  };
+  return models;
 };

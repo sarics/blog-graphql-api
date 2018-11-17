@@ -12,7 +12,7 @@ const createPost = (data, userId) => async Post => {
   return post;
 };
 
-const generatePostModel = user =>
+export default user =>
   class Post extends BaseModel {
     static tableName = 'Posts';
 
@@ -152,5 +152,3 @@ const generatePostModel = user =>
         .execute();
     }
   };
-
-export default generatePostModel;

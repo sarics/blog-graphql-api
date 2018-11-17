@@ -15,7 +15,7 @@ const createComment = (data, userId, postId) => async Comment => {
   return comment;
 };
 
-const generateCommentModel = user =>
+export default user =>
   class Comment extends BaseModel {
     static tableName = 'Comments';
 
@@ -121,5 +121,3 @@ const generateCommentModel = user =>
       return this.$relatedQuery('post').execute();
     }
   };
-
-export default generateCommentModel;
