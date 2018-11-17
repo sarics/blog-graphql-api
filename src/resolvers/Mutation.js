@@ -1,16 +1,6 @@
 import { generateToken } from '../utils/jwt';
 import getUserId from '../utils/getUserId';
 
-const createPost = (data, userId) => async Post => {
-  const post = await Post.query()
-    .insert(data)
-    .returning('*');
-
-  await post.$relatedQuery('author').relate(userId);
-
-  return post;
-};
-
 const createComment = (data, userId, postId) => async Comment => {
   const comment = await Comment.query()
     .insert(data)
@@ -60,64 +50,23 @@ export default {
     return db.User.delete();
   },
 
-  async createPost(parent, args, ctx, info) {
+  createPost(parent, args, ctx, info) {
     const { data } = args;
-    const { request, db } = ctx;
-    const userId = getUserId(request);
+    const { db } = ctx;
 
-    try {
-      const post = await db.transaction(db.Post, createPost(data, userId));
-
-      return post;
-    } catch (err) {
-      throw new Error("Post couldn't be created.");
-    }
+    return db.Post.create(data);
   },
-  async updatePost(parent, args, ctx, info) {
+  updatePost(parent, args, ctx, info) {
     const { id, data } = args;
-    const { request, db } = ctx;
-    const userId = getUserId(request);
+    const { db } = ctx;
 
-    const post = await db.Post.query()
-      .findById(id)
-      .whereExists(db.Post.relatedQuery('author').findById(userId))
-      .patch(data)
-      .returning('*')
-      .first();
-
-    if (!post) {
-      throw new Error('Post not found.');
-    }
-
-    // if (post.published && data.published === false) {
-    //   await prisma.mutation.deleteManyComments({
-    //     where: {
-    //       post: {
-    //         id,
-    //       },
-    //     },
-    //   });
-    // }
-
-    return post;
+    return db.Post.update(id, data);
   },
-  async deletePost(parent, args, ctx, info) {
+  deletePost(parent, args, ctx, info) {
     const { id } = args;
-    const { request, db } = ctx;
-    const userId = getUserId(request);
+    const { db } = ctx;
 
-    const post = await db.Post.query()
-      .findById(id)
-      .whereExists(db.Post.relatedQuery('author').findById(userId))
-      .delete()
-      .returning('*')
-      .first();
-
-    if (!post) {
-      throw new Error('Post not found.');
-    }
-
-    return post;
+    return db.Post.delete(id);
   },
 
   async createComment(parent, args, ctx, info) {

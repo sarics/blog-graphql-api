@@ -1,6 +1,16 @@
-import { Model } from 'objection';
+import { Model, transaction } from 'objection';
 
 import BaseModel from './BaseModel';
+
+const createPost = (data, userId) => async Post => {
+  const post = await Post.query()
+    .insert(data)
+    .returning('*');
+
+  await post.$relatedQuery('author').relate(userId);
+
+  return post;
+};
 
 const generatePostModel = user =>
   class Post extends BaseModel {
@@ -92,6 +102,44 @@ const generatePostModel = user =>
       }
 
       return query.execute();
+    }
+
+    static async create(data) {
+      if (!user) throw Post.createAuthenticationError();
+
+      try {
+        const post = await transaction(Post, createPost(data, user.id));
+
+        return post;
+      } catch (err) {
+        throw new Error("Post couldn't be created.");
+      }
+    }
+
+    static update(id, data) {
+      if (!user) throw Post.createAuthenticationError();
+
+      return Post.query()
+        .findById(id)
+        .whereExists(Post.relatedQuery('author').findById(user.id))
+        .patch(data)
+        .returning('*')
+        .first()
+        .throwIfNotFound()
+        .execute();
+    }
+
+    static delete(id) {
+      if (!user) throw Post.createAuthenticationError();
+
+      return Post.query()
+        .findById(id)
+        .whereExists(Post.relatedQuery('author').findById(user.id))
+        .delete()
+        .returning('*')
+        .first()
+        .throwIfNotFound()
+        .execute();
     }
   };
 
