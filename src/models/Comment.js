@@ -2,6 +2,16 @@ import { Model, transaction } from 'objection';
 
 import BaseModel from './BaseModel';
 
+const buildGetAllQuery = (query, args) => {
+  const { search } = args;
+
+  if (search) {
+    query.where('text', 'ilike', `%${search}%`);
+  }
+
+  return query;
+};
+
 const createComment = (data, userId, postId) => async Comment => {
   const comment = await Comment.query()
     .insert(data)
@@ -60,13 +70,17 @@ export default authUser =>
     }
 
     static getAll(args) {
-      return Comment.query()
+      const query = Comment.query();
+
+      return buildGetAllQuery(query, args)
         .paginated(args)
         .execute();
     }
 
-    static async countAll() {
-      const { count } = await Comment.query()
+    static async countAll(args) {
+      const query = Comment.query();
+
+      const { count } = await buildGetAllQuery(query, args)
         .count()
         .first();
 
