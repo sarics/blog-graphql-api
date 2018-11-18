@@ -20,6 +20,8 @@ export default new ApolloServer({
     };
   },
   tracing: env === 'development',
+  introspection: true,
+  playground: true,
   formatResponse(resp, { context }) {
     return {
       ...resp,
