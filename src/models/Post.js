@@ -129,17 +129,34 @@ export default user =>
         .execute();
     }
 
-    static delete(id) {
+    static async delete(id) {
       if (!user) throw Post.createAuthenticationError();
 
-      return Post.query()
+      const post = await Post.query()
         .findById(id)
         .whereExists(Post.relatedQuery('author').findById(user.id))
+        .throwIfNotFound();
+
+      return post
+        .$query()
         .delete()
         .returning('*')
         .first()
-        .throwIfNotFound()
         .execute();
+    }
+
+    async $beforeDelete(queryContext) {
+      await super.$beforeDelete(queryContext);
+
+      const related = await Promise.all([
+        this.$relatedQuery('comments', queryContext.transaction),
+      ]);
+
+      await Promise.all(
+        []
+          .concat(...related)
+          .map(item => item.$query(queryContext.transaction).delete()),
+      );
     }
 
     getAuthor() {

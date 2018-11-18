@@ -99,15 +99,18 @@ export default user =>
         .execute();
     }
 
-    static delete() {
+    static async delete() {
       if (!user) throw User.createAuthenticationError();
 
-      return User.query()
+      const userItem = await User.query()
         .findById(user.id)
+        .throwIfNotFound();
+
+      return userItem
+        .$query()
         .delete()
         .returning('*')
         .first()
-        .throwIfNotFound()
         .execute();
     }
 
@@ -142,6 +145,21 @@ export default user =>
       super.$beforeUpdate(opt, queryContext);
 
       if (this.password) this.password = bcrypt.hashSync(this.password, 10);
+    }
+
+    async $beforeDelete(queryContext) {
+      await super.$beforeDelete(queryContext);
+
+      const related = await Promise.all([
+        this.$relatedQuery('posts', queryContext.transaction),
+        this.$relatedQuery('comments', queryContext.transaction),
+      ]);
+
+      await Promise.all(
+        []
+          .concat(...related)
+          .map(item => item.$query(queryContext.transaction).delete()),
+      );
     }
 
     getPosts(args) {
