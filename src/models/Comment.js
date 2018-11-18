@@ -65,6 +65,14 @@ export default authUser =>
         .execute();
     }
 
+    static async countAll() {
+      const { count } = await Comment.query()
+        .count()
+        .first();
+
+      return parseInt(count, 10);
+    }
+
     static getById(id) {
       return Comment.query()
         .findById(id)

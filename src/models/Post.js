@@ -2,6 +2,24 @@ import { Model, transaction } from 'objection';
 
 import BaseModel from './BaseModel';
 
+const buildGetAllQuery = (query, args) => {
+  const { search } = args;
+
+  query.where('published', true);
+
+  if (search) {
+    query.where(qb => {
+      qb.where('title', 'ilike', `%${search}%`).orWhere(
+        'body',
+        'ilike',
+        `%${search}%`,
+      );
+    });
+  }
+
+  return query;
+};
+
 const createPost = (data, userId) => async Post => {
   const post = await Post.query()
     .insert(data)
@@ -59,31 +77,21 @@ export default authUser =>
     }
 
     static getAll(args) {
-      const { search, all } = args;
+      const query = Post.query();
 
-      const query = Post.query().paginated(args);
+      return buildGetAllQuery(query, args)
+        .paginated(args)
+        .execute();
+    }
 
-      if (search) {
-        query.where(qb => {
-          qb.where('title', 'ilike', `%${search}%`).orWhere(
-            'body',
-            'ilike',
-            `%${search}%`,
-          );
-        });
-      }
+    static async countAll(args) {
+      const query = Post.query();
 
-      if (all && authUser) {
-        query.where(qb => {
-          qb.where('published', true).orWhereExists(
-            Post.relatedQuery('author').findById(authUser.id),
-          );
-        });
-      } else {
-        query.where('published', true);
-      }
+      const { count } = await buildGetAllQuery(query, args)
+        .count()
+        .first();
 
-      return query.execute();
+      return parseInt(count, 10);
     }
 
     static getById(id) {

@@ -3,6 +3,16 @@ import bcrypt from 'bcryptjs';
 
 import BaseModel from './BaseModel';
 
+const buildGetAllQuery = (query, args) => {
+  const { search } = args;
+
+  if (search) {
+    query.where('name', 'ilike', `%${search}%`);
+  }
+
+  return query;
+};
+
 export default authUser =>
   class User extends BaseModel {
     static tableName = 'Users';
@@ -62,15 +72,21 @@ export default authUser =>
     }
 
     static getAll(args) {
-      const { search } = args;
+      const query = User.query();
 
-      const query = User.query().paginated(args);
+      return buildGetAllQuery(query, args)
+        .paginated(args)
+        .execute();
+    }
 
-      if (search) {
-        query.where('name', 'ilike', `%${search}%`);
-      }
+    static async countAll(args) {
+      const query = User.query();
 
-      return query.execute();
+      const { count } = await buildGetAllQuery(query, args)
+        .count()
+        .first();
+
+      return parseInt(count, 10);
     }
 
     static getById(id) {

@@ -16,7 +16,17 @@ export default new ApolloServer({
     return {
       user,
       db: generateModels(user),
+      extensions: {},
     };
   },
   tracing: env === 'development',
+  formatResponse(resp, { context }) {
+    return {
+      ...resp,
+      extensions: {
+        ...resp.extensions,
+        ...context.extensions,
+      },
+    };
+  },
 });

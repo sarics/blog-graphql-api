@@ -5,10 +5,16 @@ export default {
     return db.User.me();
   },
 
-  users(parent, args, ctx, info) {
+  async users(parent, args, ctx, info) {
     const { db } = ctx;
 
-    return db.User.getAll(args);
+    const [users, total] = await Promise.all([
+      db.User.getAll(args),
+      db.User.countAll(args),
+    ]);
+
+    ctx.extensions.total = total;
+    return users;
   },
   user(parent, args, ctx, info) {
     const { id } = args;
@@ -17,10 +23,16 @@ export default {
     return db.User.getById(id);
   },
 
-  posts(parent, args, ctx, info) {
+  async posts(parent, args, ctx, info) {
     const { db } = ctx;
 
-    return db.Post.getAll(args);
+    const [posts, total] = await Promise.all([
+      db.Post.getAll(args),
+      db.Post.countAll(args),
+    ]);
+
+    ctx.extensions.total = total;
+    return posts;
   },
   post(parent, args, ctx, info) {
     const { id } = args;
@@ -29,10 +41,16 @@ export default {
     return db.Post.getById(id);
   },
 
-  comments(parent, args, ctx, info) {
+  async comments(parent, args, ctx, info) {
     const { db } = ctx;
 
-    return db.Comment.getAll(args);
+    const [comments, total] = await Promise.all([
+      db.Comment.getAll(args),
+      db.Comment.countAll(args),
+    ]);
+
+    ctx.extensions.total = total;
+    return comments;
   },
   comment(parent, args, ctx, info) {
     const { id } = args;
