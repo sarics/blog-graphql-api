@@ -15,7 +15,7 @@ const createComment = (data, userId, postId) => async Comment => {
   return comment;
 };
 
-export default user =>
+export default authUser =>
   class Comment extends BaseModel {
     static tableName = 'Comments';
 
@@ -73,12 +73,12 @@ export default user =>
     }
 
     static async create({ postId, ...data }) {
-      if (!user) throw Comment.createAuthenticationError();
+      if (!authUser) throw Comment.createAuthenticationError();
 
       try {
         const comment = await transaction(
           Comment,
-          createComment(data, user.id, postId),
+          createComment(data, authUser.id, postId),
         );
 
         return comment;
@@ -88,11 +88,11 @@ export default user =>
     }
 
     static update(id, data) {
-      if (!user) throw Comment.createAuthenticationError();
+      if (!authUser) throw Comment.createAuthenticationError();
 
       return Comment.query()
         .findById(id)
-        .whereExists(Comment.relatedQuery('author').findById(user.id))
+        .whereExists(Comment.relatedQuery('author').findById(authUser.id))
         .patch(data)
         .returning('*')
         .first()
@@ -101,11 +101,11 @@ export default user =>
     }
 
     static delete(id) {
-      if (!user) throw Comment.createAuthenticationError();
+      if (!authUser) throw Comment.createAuthenticationError();
 
       return Comment.query()
         .findById(id)
-        .whereExists(Comment.relatedQuery('author').findById(user.id))
+        .whereExists(Comment.relatedQuery('author').findById(authUser.id))
         .delete()
         .returning('*')
         .first()

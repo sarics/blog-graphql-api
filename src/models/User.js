@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 
 import BaseModel from './BaseModel';
 
-export default user =>
+export default authUser =>
   class User extends BaseModel {
     static tableName = 'Users';
 
@@ -88,10 +88,10 @@ export default user =>
     }
 
     static update(data) {
-      if (!user) throw User.createAuthenticationError();
+      if (!authUser) throw User.createAuthenticationError();
 
       return User.query()
-        .findById(user.id)
+        .findById(authUser.id)
         .patch(data)
         .returning('*')
         .first()
@@ -100,13 +100,13 @@ export default user =>
     }
 
     static async delete() {
-      if (!user) throw User.createAuthenticationError();
+      if (!authUser) throw User.createAuthenticationError();
 
-      const userItem = await User.query()
-        .findById(user.id)
+      const user = await User.query()
+        .findById(authUser.id)
         .throwIfNotFound();
 
-      return userItem
+      return user
         .$query()
         .delete()
         .returning('*')
@@ -115,24 +115,24 @@ export default user =>
     }
 
     static me() {
-      if (!user) throw User.createNotFoundError();
+      if (!authUser) throw User.createNotFoundError();
 
-      return User.getById(user.id);
+      return User.getById(authUser.id);
     }
 
     static async login(data) {
       const { email, password } = data;
 
-      const userItem = await User.query()
+      const user = await User.query()
         .findOne({ email })
         .throwIfNotFound();
 
-      const passwordMatch = bcrypt.compareSync(password, userItem.password);
+      const passwordMatch = bcrypt.compareSync(password, user.password);
       if (!passwordMatch) {
         throw User.createNotFoundError();
       }
 
-      return userItem;
+      return user;
     }
 
     $beforeInsert(queryContext) {

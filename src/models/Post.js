@@ -12,7 +12,7 @@ const createPost = (data, userId) => async Post => {
   return post;
 };
 
-export default user =>
+export default authUser =>
   class Post extends BaseModel {
     static tableName = 'Posts';
 
@@ -73,10 +73,10 @@ export default user =>
         });
       }
 
-      if (all && user) {
+      if (all && authUser) {
         query.where(qb => {
           qb.where('published', true).orWhereExists(
-            Post.relatedQuery('author').findById(user.id),
+            Post.relatedQuery('author').findById(authUser.id),
           );
         });
       } else {
@@ -91,10 +91,10 @@ export default user =>
         .findById(id)
         .throwIfNotFound();
 
-      if (user) {
+      if (authUser) {
         query.where(qb => {
           qb.where('published', true).orWhereExists(
-            Post.relatedQuery('author').findById(user.id),
+            Post.relatedQuery('author').findById(authUser.id),
           );
         });
       } else {
@@ -105,10 +105,10 @@ export default user =>
     }
 
     static async create(data) {
-      if (!user) throw Post.createAuthenticationError();
+      if (!authUser) throw Post.createAuthenticationError();
 
       try {
-        const post = await transaction(Post, createPost(data, user.id));
+        const post = await transaction(Post, createPost(data, authUser.id));
 
         return post;
       } catch (err) {
@@ -117,11 +117,11 @@ export default user =>
     }
 
     static update(id, data) {
-      if (!user) throw Post.createAuthenticationError();
+      if (!authUser) throw Post.createAuthenticationError();
 
       return Post.query()
         .findById(id)
-        .whereExists(Post.relatedQuery('author').findById(user.id))
+        .whereExists(Post.relatedQuery('author').findById(authUser.id))
         .patch(data)
         .returning('*')
         .first()
@@ -130,11 +130,11 @@ export default user =>
     }
 
     static async delete(id) {
-      if (!user) throw Post.createAuthenticationError();
+      if (!authUser) throw Post.createAuthenticationError();
 
       const post = await Post.query()
         .findById(id)
-        .whereExists(Post.relatedQuery('author').findById(user.id))
+        .whereExists(Post.relatedQuery('author').findById(authUser.id))
         .throwIfNotFound();
 
       return post
