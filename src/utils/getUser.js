@@ -4,8 +4,10 @@ export default request => {
   const authHeader = request.headers.authorization;
   if (!authHeader) return null;
 
+  const [, token] = authHeader.match(/^Bearer ([A-Za-z0-9_\-.]+)$/) || [];
+  if (!token) return null;
+
   try {
-    const token = authHeader.replace(/^Bearer /, '');
     const { user } = verifyToken(token);
 
     return user || null;
