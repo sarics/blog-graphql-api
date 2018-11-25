@@ -1,5 +1,5 @@
 {
-  "name": "sarics-blog-api",
+  "name": "blog-graphql-api",
   "version": "1.0.0",
   "description": "",
   "main": "dist/index.js",
@@ -15,7 +15,11 @@
     "test:watch": "npm run test -- --watch"
   },
   "author": "sarics",
-  "license": "ISC",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sarics/blog-graphql-api.git"
+  },
   "engines": {
     "node": "10.x",
     "npm": "6.x"
