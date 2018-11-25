@@ -1,0 +1,23 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`me query should return error when authenticated user not found 1`] = `
+Object {
+  "code": "INTERNAL_SERVER_ERROR",
+  "exception": Object {
+    "data": undefined,
+    "name": "NotFoundError",
+    "statusCode": 404,
+  },
+}
+`;
+
+exports[`user query should return error when user not found 1`] = `
+Object {
+  "code": "INTERNAL_SERVER_ERROR",
+  "exception": Object {
+    "data": undefined,
+    "name": "NotFoundError",
+    "statusCode": 404,
+  },
+}
+`;

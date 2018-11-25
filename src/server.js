@@ -4,6 +4,7 @@ import { importSchema } from 'graphql-import';
 import resolvers from './resolvers';
 import generateModels from './models';
 import getUser from './utils/getUser';
+import formatResponse from './utils/formatResponse';
 
 const env = process.env.NODE_ENV || 'development';
 
@@ -22,13 +23,5 @@ export default new ApolloServer({
   tracing: env === 'development',
   introspection: true,
   playground: true,
-  formatResponse(resp, { context }) {
-    return {
-      ...resp,
-      extensions: {
-        ...resp.extensions,
-        ...context.extensions,
-      },
-    };
-  },
+  formatResponse,
 });
